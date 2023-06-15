@@ -62,6 +62,30 @@ func (c *PolybaseClient) LisRecords(collection string, key string) (map[string]i
 	return respDecoded, err
 }
 
+func (c *PolybaseClient) GetRecord(collection string, key string, id string) (map[string]interface{}, error) {
+	client := &http.Client{}
+	respDecoded := make(map[string]interface{})
+	path := url.QueryEscape(fmt.Sprintf("%s/%s", c.namespace, collection))
+	url := fmt.Sprintf("%s/v0/collections/%s/records/%s", c.url, path, id)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return respDecoded, err
+	}
+	body := make(map[string]interface{})
+	bodyBytes, _ := json.Marshal(body)
+	header, err := c.createAuthHeader(bodyBytes, key)
+	if err != nil {
+		return respDecoded, err
+	}
+	req.Header.Add("X-Polybase-Signature", header)
+	resp, err := client.Do(req)
+	if err != nil {
+		return respDecoded, err
+	}
+	err = json.NewDecoder(resp.Body).Decode(&respDecoded)
+	return respDecoded, err
+}
+
 func (c *PolybaseClient) CreateRecord(collection string, args []interface{}, key string) (map[string]interface{}, error) {
 	client := &http.Client{}
 

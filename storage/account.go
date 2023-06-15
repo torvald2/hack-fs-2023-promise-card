@@ -10,7 +10,7 @@ import (
 type Account struct {
 	PublicKey string
 	Roles     []string
-	Email     string
+	NickName  string
 	StartsAt  time.Time
 }
 
@@ -23,8 +23,4 @@ func (a *Account) CreateAddress() (key string, err error) {
 	privateKeyBytes := crypto.FromECDSA(getPrivateKey)
 	a.PublicKey = thePublicAddress
 	return hexutil.Encode(privateKeyBytes), nil
-}
-
-func (a *Account) Save(privateKey string) {
-
 }
