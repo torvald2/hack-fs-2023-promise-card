@@ -17,7 +17,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	conf := GetConfig()
-	r := router.NewRouter(conf.PolybaseKey, conf.PolybaseUrl, conf.PolybaseCollection, conf.TimelockHost, conf.TimelockHash)
+	r := router.NewRouter(conf.PolybaseKey, conf.PolybaseUrl, conf.PolybaseCollection, conf.TimelockHost, conf.TimelockHash, conf.PinataKey, conf.ENSOwnerAdress, conf.ENSOwnerPrivateKey, conf.EnsMainDomain, conf.RpcUrl, conf.EnsResolverAddress)
 	srv := &http.Server{
 		Addr:    conf.TCPPort,
 		Handler: r,

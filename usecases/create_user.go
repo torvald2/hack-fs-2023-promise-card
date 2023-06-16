@@ -2,12 +2,16 @@ package usecases
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"io/ioutil"
 	"time"
 
 	"github.com/drand/tlock"
 	"github.com/drand/tlock/networks/http"
+	"github.com/torvald2/hack-fs-2023-promise-card/ens"
+	"github.com/torvald2/hack-fs-2023-promise-card/pinata"
 	"github.com/torvald2/hack-fs-2023-promise-card/polybase"
 	"github.com/torvald2/hack-fs-2023-promise-card/storage"
 )
@@ -20,20 +24,32 @@ type CreateUserUseCase struct {
 	timelockChainHash string
 	encryptedKey      []byte
 	address           string
+	pinataKey         string
+	ensRootOwner      string
+	ensPrivateKey     string
+	mainENS           string
+	rpcUrl            string
+	resolver          string
 }
 
-func NewCreateUserUseCase(key string, url string, namespace string, tlUrl, tlCHash string) CreateUserUseCase {
+func NewCreateUserUseCase(key string, url string, namespace string, tlUrl, tlCHash, pinataKey, ensRootOwner, ensPrivateKey, mainENS, rpcURL, resolver string) CreateUserUseCase {
 	return CreateUserUseCase{
 		key:               key,
 		url:               url,
 		namespace:         namespace,
 		timelockHost:      tlUrl,
 		timelockChainHash: tlCHash,
+		ensRootOwner:      ensRootOwner,
+		ensPrivateKey:     ensPrivateKey,
+		mainENS:           mainENS,
+		rpcUrl:            rpcURL,
+		resolver:          resolver,
+		pinataKey:         pinataKey,
 	}
 
 }
 
-func (c *CreateUserUseCase) Execute(nickName string, duration time.Duration) error {
+func (c *CreateUserUseCase) Execute(nickName string, duration time.Duration, avatar string) error {
 	usr := storage.Account{
 		NickName: nickName,
 	}
@@ -66,6 +82,33 @@ func (c *CreateUserUseCase) Execute(nickName string, duration time.Duration) err
 	c.encryptedKey = data
 	c.address = usr.PublicKey
 
+	pinataService := pinata.New(c.pinataKey)
+
+	image, err := base64.StdEncoding.DecodeString(avatar)
+	if err != nil {
+		return err
+	}
+	cid, err := pinataService.PinImage(image, "avatar")
+	if err != nil {
+		return err
+	}
+
+	ensService := ens.ENSAdaptor{
+		OwnerAddress:    c.ensRootOwner,
+		PrivateKey:      c.ensPrivateKey,
+		MainDomain:      c.mainENS,
+		RPCUrl:          c.rpcUrl,
+		ResolverAddress: c.resolver,
+	}
+
+	_, err = ensService.CreateSubdomain(nickName, c.address)
+	if err != nil {
+		return err
+	}
+	_, err = ensService.CreateAvatar(fmt.Sprintf("ipfs://%s", cid), nickName)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

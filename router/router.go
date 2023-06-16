@@ -9,16 +9,23 @@ import (
 )
 
 type UserController struct {
-	key       string
-	url       string
-	namespace string
-	tlUrl     string
-	tlHash    string
+	key           string
+	url           string
+	namespace     string
+	tlUrl         string
+	tlHash        string
+	pinataKey     string
+	ensRootOwner  string
+	ensPrivateKey string
+	mainEns       string
+	rpcUrl        string
+	resolver      string
 }
 
 type CreateUserRequest struct {
 	Nick          string `json:"nick"`
 	AvalibleAfter int    `json:"valible_after_hours"`
+	Avatar        string `json:"avatar"`
 }
 type CreateUserResponse struct {
 	PublicKey           string `json:"public_key"`
@@ -32,8 +39,8 @@ func (u UserController) CreateUser(c *gin.Context) {
 		return
 	}
 	duration := time.Duration(body.AvalibleAfter) * time.Hour
-	us := usecases.NewCreateUserUseCase(u.key, u.url, u.namespace, u.tlUrl, u.tlHash)
-	err := us.Execute(body.Nick, duration)
+	us := usecases.NewCreateUserUseCase(u.key, u.url, u.namespace, u.tlUrl, u.tlHash, u.pinataKey, u.ensRootOwner, u.ensPrivateKey, u.mainEns, u.rpcUrl, u.resolver)
+	err := us.Execute(body.Nick, duration, body.Avatar)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		return
@@ -45,13 +52,19 @@ func (u UserController) CreateUser(c *gin.Context) {
 
 }
 
-func NewRouter(key, url, namespace, tlUrl, tlHash string) *gin.Engine {
+func NewRouter(key, url, namespace, tlUrl, tlHash, pinataKey, ensRootOwner, ensPrivateKey, mainEns, rpcUrl, resolver string) *gin.Engine {
 	usrController := UserController{
-		key:       key,
-		url:       url,
-		namespace: namespace,
-		tlUrl:     tlUrl,
-		tlHash:    tlHash,
+		key:           key,
+		url:           url,
+		namespace:     namespace,
+		tlUrl:         tlUrl,
+		tlHash:        tlHash,
+		pinataKey:     pinataKey,
+		ensRootOwner:  ensRootOwner,
+		ensPrivateKey: ensPrivateKey,
+		mainEns:       mainEns,
+		rpcUrl:        rpcUrl,
+		resolver:      resolver,
 	}
 
 	r := gin.New()

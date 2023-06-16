@@ -20,6 +20,12 @@ type AppConfig struct {
 	PolybaseCollection string `env:"POLYBASE_COLLECTION"`
 	TimelockHost       string `env:"TIMELOCK_HOST"`
 	TimelockHash       string `env:"TIMELOCK_HASH"`
+	ENSOwnerAdress     string `env:"ENS_OWNER_ADDRESS"`
+	ENSOwnerPrivateKey string `env:"ENS_OWNER_PRIVATE_KEY"`
+	RpcUrl             string `env:"RPC_URL"`
+	EnsMainDomain      string `env:"ENS_MAIN_DOMAIN"`
+	EnsResolverAddress string `env:"ENS_RESOLWER_ADDRESS"`
+	PinataKey          string `env:"PINATA_KEY"`
 }
 
 var conf AppConfig
