@@ -71,18 +71,13 @@ func (e *ENSAdaptor) CreateAvatar(avatarUrl, nick string) (string, error) {
 
 	return tx.Hash().Hex(), err
 }
-func (e *ENSAdaptor) ResolveNameAndAvatar(address string) (nick string, avatar string, err error) {
+func (e *ENSAdaptor) ResolveAvatar(address string) (avatar string, err error) {
 	client, err := ethclient.Dial(e.RPCUrl)
 	if err != nil {
 		return
 	}
-	addr := common.HexToAddress(address)
 
-	nick, err = ens.ReverseResolve(client, addr)
-	if err != nil {
-		return
-	}
-	resolver, err := ens.NewResolver(client, fmt.Sprintf("%s.%s", nick, e.MainDomain))
+	resolver, err := ens.NewResolver(client, e.MainDomain)
 	if err != nil {
 		return
 	}

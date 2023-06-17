@@ -20,6 +20,7 @@ type UserController struct {
 	mainEns       string
 	rpcUrl        string
 	resolver      string
+	nonces        map[string]string
 }
 
 type CreateUserRequest struct {
@@ -52,6 +53,22 @@ func (u UserController) CreateUser(c *gin.Context) {
 
 }
 
+func (u UserController) GetUser(c *gin.Context) {
+	var body CreateUserResponse
+	if err := c.BindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, map[string]interface{}{"err": err.Error()})
+		return
+	}
+	us := usecases.NewGetUserUseCase(u.key, u.url, u.namespace, u.tlUrl, u.tlHash, u.pinataKey, u.ensRootOwner, u.ensPrivateKey, u.mainEns, u.rpcUrl, u.resolver)
+	token, err := us.Execute(body.PrivateKeyEncrypted, body.PublicKey)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, map[string]string{"token": token})
+
+}
+
 func NewRouter(key, url, namespace, tlUrl, tlHash, pinataKey, ensRootOwner, ensPrivateKey, mainEns, rpcUrl, resolver string) *gin.Engine {
 	usrController := UserController{
 		key:           key,
@@ -70,5 +87,6 @@ func NewRouter(key, url, namespace, tlUrl, tlHash, pinataKey, ensRootOwner, ensP
 	r := gin.New()
 
 	r.POST("/users", usrController.CreateUser)
+	r.POST("/token", usrController.GetUser)
 	return r
 }
